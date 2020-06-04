@@ -8,7 +8,7 @@ import (
 	"net/url"
 	"path"
 
-	"github.com/google/uuid"
+	"github.com/rs/xid"
 	"github.com/wamuir/go-jsonapi-server/graph"
 )
 
@@ -318,7 +318,7 @@ func (tx *Tx) PostResource(t string, d *Document) (Resource, *ModelError) {
 	}
 
 	if resource.Identifier == "" {
-		resource.Identifier = uuid.New().String()
+		resource.Identifier = xid.New().String()
 	}
 
 	attributes, err := json.Marshal(resource.Attributes)
