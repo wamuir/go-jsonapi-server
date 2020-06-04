@@ -2,7 +2,6 @@ language: go
 
 os:
   - linux
-  - osx
 
 compiler:
   - gcc
@@ -11,13 +10,13 @@ compiler:
 go_import_path: github.com/wamuir/go-jsonapi-server
 
 go:
-  - 1.11.x
-  - 1.12.x
   - 1.13.x
+  - 1.14.x
   - master
 
 before_install:
   - go get github.com/davecgh/go-spew/spew
+  - go get github.com/go-chi/chi
   - go get github.com/google/uuid
   - go get github.com/mattn/go-sqlite3
   - go get github.com/xeipuuv/gojsonschema
