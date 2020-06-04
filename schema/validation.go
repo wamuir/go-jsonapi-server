@@ -2,28 +2,26 @@ package schema
 
 import "github.com/xeipuuv/gojsonschema"
 
-var schema *gojsonschema.Schema = setSchema(gohex)
+var schema *gojsonschema.Schema
 
-func setSchema(bytes []byte) *gojsonschema.Schema {
+func init() {
 
-	loader := gojsonschema.NewBytesLoader(bytes)
+	loader := gojsonschema.NewBytesLoader(gohex)
 
-	s, err := gojsonschema.NewSchema(loader)
-	if err != nil {
+	if s, err := gojsonschema.NewSchema(loader); err != nil {
 		panic(err)
+	} else {
+		schema = s
 	}
-
-	return s
 }
 
 func Validate(document interface{}) (*gojsonschema.Result, error) {
 
 	loader := gojsonschema.NewGoLoader(document)
 
-	result, err := schema.Validate(loader)
-	if err != nil {
-		return result, err
+	if result, err := schema.Validate(loader); err != nil {
+		return nil, err
+	} else {
+		return result, nil
 	}
-
-	return result, nil
 }

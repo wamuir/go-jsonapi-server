@@ -1,69 +1,80 @@
 package handle
 
 import (
-	"context"
-	"github.com/wamuir/go-jsonapi-server/graph"
-	"github.com/wamuir/go-jsonapi-server/model"
 	"net/http"
-	"net/url"
+
+	"github.com/go-chi/chi"
+	"github.com/wamuir/go-jsonapi-server/model"
 )
 
 // Resource is a handler for requests corresponding to a single resource
 // (of type t string with identifier i string), with possible methods
 // GET, HEAD, PATCH and DELETE.
-func Resource(ctx context.Context, b url.URL, g graph.Graph, c model.Parameters, w http.ResponseWriter, r *http.Request, t, i string) (Response, *model.ErrorObject) {
+func (env *Environment) HandleResource(w http.ResponseWriter, r *http.Request) {
 
 	var response Response = NewResponse()
 
-	q, errObj := model.ParseQueryString(r.URL, c)
-	if errObj != nil {
-		return response, errObj
+	q, e := model.ParseQueryString(r.URL, env.Parameters)
+	if e != nil {
+		env.Fail(w, r, e)
+		return
 	}
+
+	t := chi.URLParam(r, "type")
+	i := chi.URLParam(r, "id")
 
 	switch r.Method {
 
 	case "OPTIONS":
 
-		_, errObj := model.GetResource(ctx, g, t, i, b, q)
-		if errObj != nil {
-			return response, errObj
+		_, e := model.GetResource(r.Context(), env.Graph, t, i, env.BaseURL, q)
+		if e != nil {
+			env.Fail(w, r, e)
+			return
 		}
 		response.Header.Set("Allow", "OPTIONS, GET, HEAD, PATCH, DELETE")
 		response.Header.Set("Access-Control-Allow-Methods", "OPTIONS, GET, HEAD, PATCH, DELETE")
 		response.Status = http.StatusNoContent
-		return response, nil
+		env.Success(w, r, response)
+		return
 
 	case "GET", "HEAD":
 
-		document, errObj := model.GetResource(ctx, g, t, i, b, q)
-		if errObj != nil {
-			return response, errObj
+		document, e := model.GetResource(r.Context(), env.Graph, t, i, env.BaseURL, q)
+		if e != nil {
+			env.Fail(w, r, e)
+			return
 		}
 		response.Body = document
 		response.Status = http.StatusOK
-		return response, nil
+		env.Success(w, r, response)
+		return
 
 	case "PATCH":
 
 		// Method not implemented
-		errObj := model.MakeError(http.StatusNotImplemented)
-		errObj.Code = "b83e07"
-		return response, errObj
+		e := model.MakeError(http.StatusNotImplemented)
+		e.Code = "b83e07"
+		env.Success(w, r, response)
+		return
 
 	case "DELETE":
 
-		errObj := model.DeleteResource(ctx, g, t, i)
-		if errObj != nil {
-			return response, errObj
+		e := model.DeleteResource(r.Context(), env.Graph, t, i)
+		if e != nil {
+			env.Fail(w, r, e)
+			return
 		}
 		response.Status = http.StatusNoContent
-		return response, nil
+		env.Success(w, r, response)
+		return
 
 	default:
 
-		errObj := model.MakeError(http.StatusMethodNotAllowed)
-		errObj.Code = "594414"
-		return response, errObj
+		e := model.MakeError(http.StatusMethodNotAllowed)
+		e.Code = "594414"
+		env.Fail(w, r, e)
+		return
 
 	}
 }

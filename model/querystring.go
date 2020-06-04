@@ -71,12 +71,12 @@ func (ring KeyRing) Requests(key string) bool {
 	return false
 }
 
-func ParseIntegerParameter(parameter string, q url.Values, params Parameters) (int64, *ErrorObject) {
+func ParseIntegerParameter(parameter string, q url.Values, params Parameters) (int64, *ModelError) {
 
 	var (
 		value  int64
 		err    error
-		errObj *ErrorObject
+		errObj *ModelError
 	)
 
 	switch entries := q[parameter]; {
@@ -139,11 +139,11 @@ func ParseIntegerParameter(parameter string, q url.Values, params Parameters) (i
 
 }
 
-func ParseQueryString(u *url.URL, params Parameters) (QueryParams, *ErrorObject) {
+func ParseQueryString(u *url.URL, params Parameters) (QueryParams, *ModelError) {
 
 	var (
 		queryParams QueryParams
-		errObj      *ErrorObject
+		errObj      *ModelError
 	)
 
 	q, err := url.ParseQuery(u.RawQuery)

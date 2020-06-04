@@ -10,7 +10,7 @@ import (
 	"path"
 )
 
-func DeleteRelationship(ctx context.Context, g graph.Graph, t, i, k string, d *Document) *ErrorObject {
+func DeleteRelationship(ctx context.Context, g graph.Graph, t, i, k string, d *Document) *ModelError {
 
 	transaction, err := g.Transaction(ctx, true)
 	if err != nil {
@@ -32,7 +32,7 @@ func DeleteRelationship(ctx context.Context, g graph.Graph, t, i, k string, d *D
 	return nil
 }
 
-func (tx *Tx) DeleteRelationship(t, i, k string, document *Document) *ErrorObject {
+func (tx *Tx) DeleteRelationship(t, i, k string, document *Document) *ModelError {
 
 	var collection []Resource
 
@@ -71,7 +71,7 @@ func (tx *Tx) DeleteRelationship(t, i, k string, document *Document) *ErrorObjec
 	return nil
 }
 
-func GetRelationship(ctx context.Context, g graph.Graph, t, i, k string, h url.URL, q QueryParams) (*Document, *ErrorObject) {
+func GetRelationship(ctx context.Context, g graph.Graph, t, i, k string, h url.URL, q QueryParams) (*Document, *ModelError) {
 
 	var document *Document = &Document{}
 
@@ -95,7 +95,7 @@ func GetRelationship(ctx context.Context, g graph.Graph, t, i, k string, h url.U
 	return document, nil
 }
 
-func (tx *Tx) GetRelationship(t, i, k string, h url.URL, q QueryParams) (*Document, *ErrorObject) {
+func (tx *Tx) GetRelationship(t, i, k string, h url.URL, q QueryParams) (*Document, *ModelError) {
 
 	var document *Document = &Document{}
 
@@ -241,7 +241,7 @@ func (tx *Tx) GetRelationship(t, i, k string, h url.URL, q QueryParams) (*Docume
 	return document, nil
 }
 
-func PostRelationship(ctx context.Context, g graph.Graph, t, i, k string, document *Document) *ErrorObject {
+func PostRelationship(ctx context.Context, g graph.Graph, t, i, k string, document *Document) *ModelError {
 
 	transaction, err := g.Transaction(ctx, false)
 	if err != nil {
@@ -272,7 +272,7 @@ func PostRelationship(ctx context.Context, g graph.Graph, t, i, k string, docume
 	return nil
 }
 
-func (tx *Tx) PostRelationship(t, i, k string, document *Document) *ErrorObject {
+func (tx *Tx) PostRelationship(t, i, k string, document *Document) *ModelError {
 
 	var collection []Resource
 

@@ -4,8 +4,9 @@ go 1.13
 
 require (
 	github.com/davecgh/go-spew v1.1.1
+	github.com/go-chi/chi v4.1.2+incompatible
 	github.com/google/uuid v1.1.1
 	github.com/mattn/go-sqlite3 v2.0.2+incompatible
-	github.com/wamuir/gohex v0.0.0-20191221172905-4e7e78071ee8 // indirect
 	github.com/xeipuuv/gojsonschema v1.2.0
+	golang.org/x/net v0.0.0-20200602114024-627f9648deb9 // indirect
 )

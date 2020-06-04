@@ -10,7 +10,7 @@ import (
 	"path"
 )
 
-func GetRelated(ctx context.Context, g graph.Graph, t, i, k string, h url.URL, q QueryParams) (*Document, *ErrorObject) {
+func GetRelated(ctx context.Context, g graph.Graph, t, i, k string, h url.URL, q QueryParams) (*Document, *ModelError) {
 
 	var document *Document = &Document{}
 
@@ -34,7 +34,7 @@ func GetRelated(ctx context.Context, g graph.Graph, t, i, k string, h url.URL, q
 	return document, nil
 }
 
-func (tx *Tx) GetRelated(t, i, k string, h url.URL, q QueryParams) (*Document, *ErrorObject) {
+func (tx *Tx) GetRelated(t, i, k string, h url.URL, q QueryParams) (*Document, *ModelError) {
 
 	var document *Document = &Document{}
 

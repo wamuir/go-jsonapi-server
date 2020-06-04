@@ -30,7 +30,7 @@ func (resource Resource) Identify() Resource {
 	}
 }
 
-func DeleteResource(ctx context.Context, g graph.Graph, t, i string) *ErrorObject {
+func DeleteResource(ctx context.Context, g graph.Graph, t, i string) *ModelError {
 
 	transaction, err := g.Transaction(ctx, false)
 	if err != nil {
@@ -61,7 +61,7 @@ func DeleteResource(ctx context.Context, g graph.Graph, t, i string) *ErrorObjec
 	return nil
 }
 
-func (tx *Tx) DeleteResource(t, i string) *ErrorObject {
+func (tx *Tx) DeleteResource(t, i string) *ModelError {
 
 	err := tx.DeleteVertex(t, i)
 	if err == graph.ErrNoRows {
@@ -80,7 +80,7 @@ func (tx *Tx) DeleteResource(t, i string) *ErrorObject {
 }
 
 // Begin a new *Transaction and make a call to GetResourceLinkage()
-func GetResource(ctx context.Context, g graph.Graph, t, i string, h url.URL, q QueryParams) (*Document, *ErrorObject) {
+func GetResource(ctx context.Context, g graph.Graph, t, i string, h url.URL, q QueryParams) (*Document, *ModelError) {
 
 	var document *Document = &Document{}
 
@@ -105,7 +105,7 @@ func GetResource(ctx context.Context, g graph.Graph, t, i string, h url.URL, q Q
 
 }
 
-func (tx *Tx) GetResource(t, i string, h url.URL, q QueryParams) (*Document, *ErrorObject) {
+func (tx *Tx) GetResource(t, i string, h url.URL, q QueryParams) (*Document, *ModelError) {
 
 	document := &Document{}
 
@@ -262,7 +262,7 @@ func (tx *Tx) GetResource(t, i string, h url.URL, q QueryParams) (*Document, *Er
 
 }
 
-func PostResource(ctx context.Context, g graph.Graph, t string, d *Document) (Resource, *ErrorObject) {
+func PostResource(ctx context.Context, g graph.Graph, t string, d *Document) (Resource, *ModelError) {
 
 	var identifier Resource
 
@@ -295,7 +295,7 @@ func PostResource(ctx context.Context, g graph.Graph, t string, d *Document) (Re
 	return identifier, nil
 }
 
-func (tx *Tx) PostResource(t string, d *Document) (Resource, *ErrorObject) {
+func (tx *Tx) PostResource(t string, d *Document) (Resource, *ModelError) {
 
 	var resource Resource
 

@@ -20,7 +20,7 @@ type Document struct {
 	Meta     map[string]interface{} `json:"meta,omitempty"`
 	Links    LinksObject            `json:"links,omitempty"`
 	Included Included               `json:"included,omitempty"`
-	Errors   []ErrorObject          `json:"errors,omitempty"`
+	Errors   []ModelError           `json:"errors,omitempty"`
 }
 
 type Implementation struct {

@@ -19,8 +19,8 @@ import (
 //
 var baseURL = url.URL{
 	Scheme: "http",
-	Host:   "localhost:8080", // port optional
-	Path:   "/",              // trailing slash required
+	Host:   ":8080", // port optional
+	Path:   "/",     // trailing slash required
 }
 
 // Address and port for the HTTP server to listen on.

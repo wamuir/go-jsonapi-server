@@ -5,7 +5,8 @@ import (
 	"strconv"
 )
 
-type ErrorObject struct {
+type ModelError struct {
+	Error      error                  `json:"-"`
 	Identifier string                 `json:"id,omitempty"`
 	Links      *LinksObject           `json:"links,omitempty"`
 	Status     string                 `json:"status,omitempty"`
@@ -21,9 +22,9 @@ type SourceObject struct {
 	Parameter string `json:"parameter,omitempty"`
 }
 
-func MakeError(status int) *ErrorObject {
+func MakeError(status int) *ModelError {
 
-	return &ErrorObject{
+	return &ModelError{
 		Status: strconv.Itoa(status),
 		Title:  http.StatusText(status),
 	}

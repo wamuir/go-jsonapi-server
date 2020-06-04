@@ -7,7 +7,7 @@ import (
 	"net/http"
 )
 
-func Decode(body io.Reader) (*Document, *ErrorObject) {
+func Decode(body io.Reader) (*Document, *ModelError) {
 
 	var document *Document
 
@@ -15,9 +15,9 @@ func Decode(body io.Reader) (*Document, *ErrorObject) {
 	decoder := json.NewDecoder(body)
 	err := decoder.Decode(&document)
 	if err != nil {
-		errObj := MakeError(http.StatusBadRequest)
-		errObj.Code = "e6f91b"
-		return document, errObj
+		e := MakeError(http.StatusBadRequest)
+		e.Code = "e6f91b"
+		return nil, e
 	}
 
 	// Decode Data member
@@ -48,7 +48,7 @@ func Decode(body io.Reader) (*Document, *ErrorObject) {
 	return document, nil
 }
 
-func decodeDataMbr(i interface{}) (interface{}, *ErrorObject) {
+func decodeDataMbr(i interface{}) (interface{}, *ModelError) {
 
 	j, err := json.Marshal(i)
 	if err != nil {

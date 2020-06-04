@@ -2,45 +2,56 @@ package main
 
 import (
 	"fmt"
-	"github.com/wamuir/go-jsonapi-server/graph"
-	sqlite3 "github.com/wamuir/go-jsonapi-server/graph/sqlite3"
-	"github.com/wamuir/go-jsonapi-server/model"
 	"log"
 	"net/http"
-	"net/url"
 	"os"
 	"time"
-)
 
-type environment struct {
-	BaseURL    url.URL
-	Graph      graph.Graph
-	Parameters model.Parameters
-	Stderr     *log.Logger
-	Stdout     *log.Logger
-}
+	"github.com/go-chi/chi"
+	"github.com/go-chi/chi/middleware"
+	sqlite3 "github.com/wamuir/go-jsonapi-server/graph/sqlite3"
+	"github.com/wamuir/go-jsonapi-server/handle"
+)
 
 func main() {
 
 	stderr := log.New(os.Stderr, "ERROR: ", log.LstdFlags|log.LUTC)
 	stdout := log.New(os.Stdout, "INFO: ", log.LstdFlags|log.LUTC)
 
-	g, err := sqlite3.Connect(dsn.String())
+	graph, err := sqlite3.Connect(dsn.String())
 	if err != nil {
 		stderr.Fatal(err.Error())
 	}
 
-	env := &environment{
+	env := &handle.Environment{
 		BaseURL:    baseURL,
-		Graph:      g,
+		Graph:      graph,
 		Parameters: parameters,
 		Stderr:     stderr,
 		Stdout:     stdout,
 	}
 
+	r := chi.NewRouter()
+	r.Use(middleware.RequestID)
+	r.Use(middleware.RealIP)
+	r.Use(middleware.Logger)
+	r.Use(middleware.NoCache)
+	r.Use(middleware.Recoverer)
+	r.Use(middleware.Timeout(time.Duration(ctxTimeout) * time.Second))
+	r.NotFound(env.Handle404)
+	r.MethodNotAllowed(env.Handle405)
+	r.Route(`/{type:[^\/]+}`, func(r chi.Router) {
+		r.HandleFunc("/", env.HandleCollection)
+		r.Route(`/{id:[^\/]+}`, func(r chi.Router) {
+			r.HandleFunc(`/`, env.HandleResource)
+			r.HandleFunc(`/{related:[^\/]+}`, env.HandleRelated)
+			r.HandleFunc(`/relationships/{relationship:[^\/]+}`, env.HandleRelationship)
+		})
+	})
+
 	server := &http.Server{
 		Addr:         fmt.Sprintf("%s:%d", listenAddr, listenPort),
-		Handler:      logging(env)(route(ctxTimeout, env)),
+		Handler:      r,
 		ErrorLog:     stderr,
 		ReadTimeout:  time.Duration(readTimeout) * time.Second,
 		WriteTimeout: time.Duration(writeTimeout) * time.Second,

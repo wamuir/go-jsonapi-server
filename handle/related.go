@@ -1,55 +1,64 @@
 package handle
 
 import (
-	"context"
-	"github.com/wamuir/go-jsonapi-server/graph"
-	"github.com/wamuir/go-jsonapi-server/model"
 	"net/http"
-	"net/url"
+
+	"github.com/go-chi/chi"
+	"github.com/wamuir/go-jsonapi-server/model"
 )
 
 // Related is a handler for requests corresponding to a resource's
 // related resources (primary resource of type t string and identifier
 // i string with relationship keyed by k string), with possible
 // methods GET and HEAD.
-func Related(ctx context.Context, b url.URL, g graph.Graph, c model.Parameters, w http.ResponseWriter, r *http.Request, t, i, k string) (Response, *model.ErrorObject) {
+func (env *Environment) HandleRelated(w http.ResponseWriter, r *http.Request) {
 
 	var response Response = NewResponse()
 
-	q, errObj := model.ParseQueryString(r.URL, c)
-	if errObj != nil {
-		return response, errObj
+	q, e := model.ParseQueryString(r.URL, env.Parameters)
+	if e != nil {
+		env.Fail(w, r, e)
+		return
 	}
+
+	t := chi.URLParam(r, "type")
+	i := chi.URLParam(r, "id")
+	k := chi.URLParam(r, "related")
 
 	switch r.Method {
 
 	case "OPTIONS":
 
-		_, errObj := model.GetRelated(ctx, g, t, i, k, b, q)
-		if errObj != nil {
-			return response, errObj
+		_, e := model.GetRelated(r.Context(), env.Graph, t, i, k, env.BaseURL, q)
+		if e != nil {
+			env.Fail(w, r, e)
+			return
 		}
 		response.Header.Set("Allow", "OPTIONS, GET, HEAD")
 		response.Header.Set("Access-Control-Allow-Methods", "OPTIONS, GET, HEAD")
 		response.Status = http.StatusNoContent
-		return response, nil
+		env.Success(w, r, response)
+		return
 
 	case "GET", "HEAD":
 
-		document, errObj := model.GetRelated(ctx, g, t, i, k, b, q)
-		if errObj != nil {
-			return response, errObj
+		document, e := model.GetRelated(r.Context(), env.Graph, t, i, k, env.BaseURL, q)
+		if e != nil {
+			env.Fail(w, r, e)
+			return
 		}
 		response.Body = document
 		response.Status = http.StatusOK
-		return response, nil
+		env.Success(w, r, response)
+		return
 
 	default:
 
 		// HTTP Method not allowed
-		errObj := model.MakeError(http.StatusMethodNotAllowed)
-		errObj.Code = "ce3a82"
-		return response, errObj
+		e := model.MakeError(http.StatusMethodNotAllowed)
+		e.Code = "ce3a82"
+		env.Fail(w, r, e)
+		return
 
 	}
 }

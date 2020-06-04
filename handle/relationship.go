@@ -1,108 +1,126 @@
 package handle
 
 import (
-	"context"
-	"github.com/wamuir/go-jsonapi-server/graph"
-	"github.com/wamuir/go-jsonapi-server/model"
 	"net/http"
-	"net/url"
+
+	"github.com/go-chi/chi"
+	"github.com/wamuir/go-jsonapi-server/model"
 )
 
 // Relationship is a handler for requests corresponding to a resource's
 // relationship (resource of type t string and identifier i string with
 // relationship keyed by k string), with possible methods GET, HEAD,
 // PATCH and DELETE.
-func Relationship(ctx context.Context, b url.URL, g graph.Graph, c model.Parameters, w http.ResponseWriter, r *http.Request, t, i, k string) (Response, *model.ErrorObject) {
+func (env *Environment) HandleRelationship(w http.ResponseWriter, r *http.Request) {
 
 	var response Response = NewResponse()
 
-	q, errObj := model.ParseQueryString(r.URL, c)
-	if errObj != nil {
-		return response, errObj
+	q, e := model.ParseQueryString(r.URL, env.Parameters)
+	if e != nil {
+		env.Fail(w, r, e)
+		return
 	}
+
+	t := chi.URLParam(r, "type")
+	i := chi.URLParam(r, "id")
+	k := chi.URLParam(r, "relationship")
 
 	switch r.Method {
 
 	case "OPTIONS":
 
-		_, errObj := model.GetRelationship(ctx, g, t, i, k, b, q)
-		if errObj != nil {
-			return response, errObj
+		_, e := model.GetRelationship(r.Context(), env.Graph, t, i, k, env.BaseURL, q)
+		if e != nil {
+			env.Fail(w, r, e)
+			return
 		}
 		response.Header.Set("Allow", "OPTIONS, GET, HEAD, POST, PATCH, DELETE")
 		response.Header.Set("Access-Control-Allow-Methods", "OPTIONS, GET, HEAD, POST, PATCH, DELETE")
 		response.Status = http.StatusNoContent
-		return response, nil
+		env.Success(w, r, response)
+		return
 
 	case "GET", "HEAD":
 
-		document, errObj := model.GetRelationship(ctx, g, t, i, k, b, q)
-		if errObj != nil {
-			return response, errObj
+		document, e := model.GetRelationship(r.Context(), env.Graph, t, i, k, env.BaseURL, q)
+		if e != nil {
+			env.Fail(w, r, e)
+			return
 		}
 		response.Body = document
 		response.Status = http.StatusOK
-		return response, nil
+		env.Success(w, r, response)
+		return
 
 	case "POST":
 
 		// Validate content type
-		errObj := validateMIME(r.Header.Get("Content-Type"))
-		if errObj != nil {
-			return response, errObj
+		e := validateMIME(r.Header.Get("Content-Type"))
+		if e != nil {
+			env.Fail(w, r, e)
+			return
 		}
 
 		// Parse request body
-		document, errObj := model.Decode(r.Body)
-		if errObj != nil {
-			return response, errObj
+		document, e := model.Decode(r.Body)
+		if e != nil {
+			env.Fail(w, r, e)
+			return
 		}
 
 		// Post members to relationship
-		errObj = model.PostRelationship(ctx, g, t, i, k, document)
-		if errObj != nil {
-			return response, errObj
+		e = model.PostRelationship(r.Context(), env.Graph, t, i, k, document)
+		if e != nil {
+			env.Fail(w, r, e)
+			return
 		}
 
 		// response.Header.Set("Location", i.URL(h))
 		response.Status = http.StatusNoContent
-		return response, nil
+		env.Success(w, r, response)
+		return
 
 	case "PATCH":
 
 		// Method not implemented
-		errObj := model.MakeError(http.StatusNotImplemented)
-		errObj.Code = "b4d563"
-		return response, errObj
+		e := model.MakeError(http.StatusNotImplemented)
+		e.Code = "b4d563"
+		env.Fail(w, r, e)
+		return
 
 	case "DELETE":
 
 		// Validate content type
-		errObj := validateMIME(r.Header.Get("Content-Type"))
-		if errObj != nil {
-			return response, errObj
+		e := validateMIME(r.Header.Get("Content-Type"))
+		if e != nil {
+			env.Fail(w, r, e)
+			return
 		}
 
 		// Parse request body
-		document, errObj := model.Decode(r.Body)
-		if errObj != nil {
-			return response, errObj
+		document, e := model.Decode(r.Body)
+		if e != nil {
+			env.Fail(w, r, e)
+			return
 		}
 
 		// Delete from relationship
-		errObj = model.DeleteRelationship(ctx, g, t, i, k, document)
-		if errObj != nil {
-			return response, errObj
+		e = model.DeleteRelationship(r.Context(), env.Graph, t, i, k, document)
+		if e != nil {
+			env.Fail(w, r, e)
+			return
 		}
 		response.Status = http.StatusNoContent
-		return response, nil
+		env.Success(w, r, response)
+		return
 
 	default:
 
 		// HTTP Method not allowed
-		errObj := model.MakeError(http.StatusMethodNotAllowed)
-		errObj.Code = "ce3a82"
-		return response, errObj
+		e := model.MakeError(http.StatusMethodNotAllowed)
+		e.Code = "ce3a82"
+		env.Fail(w, r, e)
+		return
 
 	}
 }

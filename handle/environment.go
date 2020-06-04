@@ -1,18 +1,28 @@
 package handle
 
 import (
-	"context"
 	"encoding/json"
-	"fmt"
-	"github.com/davecgh/go-spew/spew"
-	"github.com/wamuir/go-jsonapi-server/model"
-	"github.com/wamuir/go-jsonapi-server/schema"
 	"log"
 	"mime"
 	"net/http"
+	"net/url"
 	"strconv"
-	"time"
+	"strings"
+
+	"github.com/davecgh/go-spew/spew"
+
+	"github.com/wamuir/go-jsonapi-server/graph"
+	"github.com/wamuir/go-jsonapi-server/model"
+	"github.com/wamuir/go-jsonapi-server/schema"
 )
+
+type Environment struct {
+	BaseURL    url.URL
+	Graph      graph.Graph
+	Parameters model.Parameters
+	Stderr     *log.Logger
+	Stdout     *log.Logger
+}
 
 // Response is the header, body and status for a response.
 type Response struct {
@@ -40,79 +50,84 @@ func copyHeader(dst, src http.Header) {
 }
 
 // Validates Content-Type header per JSON:API spec
-func validateMIME(contentType string) *model.ErrorObject {
+func validateMIME(contentType string) *model.ModelError {
 
 	//contentType := r.Header.Get("Content-Type")
+
+	if len(strings.TrimSpace(contentType)) == 0 {
+		e := model.MakeError(http.StatusUnsupportedMediaType)
+		e.Code = "d24289"
+		e.Title = "Missing media type"
+		e.Detail = "Clients MUST send all JSON:API data in request documents with the header `Content-Type: application/vnd.api+json` without any media type parameters"
+		return e
+	}
+
 	mediatype, params, err := mime.ParseMediaType(contentType)
 	if err != nil {
-		errObj := model.MakeError(http.StatusInternalServerError)
-		errObj.Code = "811c93"
-		errObj.Title = "Encountered internal error while parsing media type"
-		errObj.Detail = err.Error()
-		return errObj
+		e := model.MakeError(http.StatusInternalServerError)
+		e.Code = "811c93"
+		e.Title = "Encountered internal error while parsing media type"
+		e.Detail = err.Error()
+		return e
 	} else if mediatype != "application/vnd.api+json" || len(params) != 0 {
-		errObj := model.MakeError(http.StatusUnsupportedMediaType)
-		errObj.Code = "d24289"
-		errObj.Title = "Invalid media type"
-		errObj.Detail = "Clients MUST send all JSON:API data in request documents with the header `Content-Type: application/vnd.api+json` without any media type parameters"
-		return errObj
+		e := model.MakeError(http.StatusUnsupportedMediaType)
+		e.Code = "d24289"
+		e.Title = "Invalid media type"
+		e.Detail = "Clients MUST send all JSON:API data in request documents with the header `Content-Type: application/vnd.api+json` without any media type parameters"
+		return e
 	}
 
 	return nil
 }
 
 // Fail completes an errored response.
-func Fail(ctx context.Context, stderr *log.Logger, w http.ResponseWriter, r *http.Request, start time.Time, errObj *model.ErrorObject) {
+func (env *Environment) Fail(w http.ResponseWriter, r *http.Request, e *model.ModelError) {
 
 	//var document model.Document
 	var document model.Document = model.NewDocument()
-	document.Errors = append(document.Errors, *errObj)
+	document.Errors = append(document.Errors, *e)
 
-	status, err := strconv.Atoi(errObj.Status)
+	status, err := strconv.Atoi(e.Status)
 	if err != nil {
 		status = http.StatusInternalServerError
-		errObj = model.MakeError(http.StatusInternalServerError)
-		errObj.Code = "dcaa49"
-		errObj.Title = "Encountered an internal error while processing an error: failed to convert HTTP status string to an integer"
-		errObj.Detail = err.Error()
-		document.Errors = append(document.Errors, *errObj)
+		e := model.MakeError(http.StatusInternalServerError)
+		e.Code = "dcaa49"
+		e.Title = "Encountered an internal error while processing an error: failed to convert HTTP status string to an integer"
+		e.Detail = err.Error()
+		document.Errors = append(document.Errors, *e)
 	}
 
-	if ctx.Err() != nil {
+	if r.Context().Err() != nil {
 		status = http.StatusGatewayTimeout
-		errObj = model.MakeError(http.StatusGatewayTimeout)
-		errObj.Code = "95fd64"
-		errObj.Title = "Server timed out while completing the request"
-		errObj.Detail = ctx.Err().Error()
-		stderr.Println(errObj.Detail)
-		document.Errors = append([]model.ErrorObject{*errObj}, document.Errors...) // prepend
+		e := model.MakeError(http.StatusGatewayTimeout)
+		e.Code = "95fd64"
+		e.Title = "Server timed out while completing the request"
+		e.Detail = r.Context().Err().Error()
+		env.Stderr.Println(e.Detail)
+		document.Errors = append([]model.ModelError{*e}, document.Errors...) // prepend
 	}
 
 	result, err := schema.Validate(document)
 	if err != nil {
-		errObj := model.MakeError(http.StatusInternalServerError)
-		errObj.Code = "f42960"
-		errObj.Title = "Encountered an internal error while processing an error: JSON schema validator returned error"
-		errObj.Detail = err.Error()
-		document.Errors = append(document.Errors, *errObj)
+		e := model.MakeError(http.StatusInternalServerError)
+		e.Code = "f42960"
+		e.Title = "Encountered an internal error while processing an error: JSON schema validator returned error"
+		e.Detail = err.Error()
+		document.Errors = append(document.Errors, *e)
 	} else if !result.Valid() {
-		errObj := model.MakeError(http.StatusInternalServerError)
-		errObj.Code = "b6be49"
-		errObj.Title = "Encountered an internal error while processing an error: error document failed to validate against JSON:API schema"
+		e := model.MakeError(http.StatusInternalServerError)
+		e.Code = "b6be49"
+		e.Title = "Encountered an internal error while processing an error: error document failed to validate against JSON:API schema"
 		// errObj.Detail =
-		document.Errors = append(document.Errors, *errObj)
+		document.Errors = append(document.Errors, *e)
 	}
 
 	if status == http.StatusInternalServerError {
 		defer func() {
-			dump := spew.Sdump(errObj)
-			stderr.Println(dump)
+			dump := spew.Sdump(document.Errors)
+			env.Stderr.Println(dump)
 		}()
 	}
-
-	w.Header().Set("Access-Control-Allow-Origin", "*")
-	duration := fmt.Sprintf("%.4f", time.Since(start).Seconds())
-	w.Header().Set("Server-Timing", "total;dur="+duration)
 
 	if r.Method == "HEAD" {
 		w.WriteHeader(status)
@@ -132,7 +147,7 @@ func Fail(ctx context.Context, stderr *log.Logger, w http.ResponseWriter, r *htt
 }
 
 // Success completes an unerrored response.
-func Success(ctx context.Context, stderr *log.Logger, w http.ResponseWriter, r *http.Request, start time.Time, response Response) {
+func (env *Environment) Success(w http.ResponseWriter, r *http.Request, response Response) {
 
 	// Validate response body against JSON:API schema
 	if response.Body != nil {
@@ -147,14 +162,15 @@ func Success(ctx context.Context, stderr *log.Logger, w http.ResponseWriter, r *
 			errObj.Code = "612382"
 			errObj.Title = "Encountered internal error while validating request body against JSON:API schema"
 			errObj.Detail = err.Error()
-			Fail(ctx, stderr, w, r, start, errObj)
+			env.Fail(w, r, errObj)
 			return
+
 		} else if !result.Valid() {
 			errObj := model.MakeError(http.StatusInternalServerError)
 			errObj.Code = "3d2798"
 			errObj.Title = "Response document failed to validate against JSON:API schema"
 			// errObj.Detail =
-			Fail(ctx, stderr, w, r, start, errObj)
+			env.Fail(w, r, errObj)
 			return
 		}
 
@@ -167,10 +183,6 @@ func Success(ctx context.Context, stderr *log.Logger, w http.ResponseWriter, r *
 			response.Header.Set("Content-Type", "application/vnd.api+json")
 		}
 	}
-
-	// Add timing to header
-	duration := fmt.Sprintf("%.4f", time.Since(start).Seconds())
-	response.Header.Set("Server-Timing", "total;dur="+duration)
 
 	// Write header
 	copyHeader(w.Header(), response.Header)
