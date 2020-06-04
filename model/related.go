@@ -4,10 +4,11 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/wamuir/go-jsonapi-server/graph"
 	"net/http"
 	"net/url"
 	"path"
+
+	"github.com/wamuir/go-jsonapi-server/graph"
 )
 
 func GetRelated(ctx context.Context, g graph.Graph, t, i, k string, h url.URL, q QueryParams) (*Document, *ModelError) {

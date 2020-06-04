@@ -3,6 +3,7 @@ package model
 import (
 	"bytes"
 	"encoding/json"
+
 	"github.com/wamuir/go-jsonapi-server/graph"
 )
 

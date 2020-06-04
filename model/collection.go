@@ -3,9 +3,10 @@ package model
 import (
 	"context"
 	"fmt"
-	"github.com/wamuir/go-jsonapi-server/graph"
 	"net/http"
 	"net/url"
+
+	"github.com/wamuir/go-jsonapi-server/graph"
 )
 
 type Collection []Resource

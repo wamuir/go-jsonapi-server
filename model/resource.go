@@ -4,11 +4,12 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/google/uuid"
-	"github.com/wamuir/go-jsonapi-server/graph"
 	"net/http"
 	"net/url"
 	"path"
+
+	"github.com/google/uuid"
+	"github.com/wamuir/go-jsonapi-server/graph"
 )
 
 type Resource struct {
