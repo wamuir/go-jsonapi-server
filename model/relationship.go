@@ -277,7 +277,13 @@ func (tx *Tx) PostRelationship(t, i, k string, document *Document) *ModelError {
 
 	var collection []Resource
 
-	switch v := document.Data.(type) {
+	m, err := decodeDataMbr(document.Data)
+	if err != nil {
+		return err
+	}
+
+	switch v:= m.(type) {
+	// switch v := document.Data.(type) {
 
 	case Collection:
 		collection = v
