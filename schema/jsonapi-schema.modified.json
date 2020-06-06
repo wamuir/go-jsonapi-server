@@ -134,11 +134,11 @@
       "properties": {
         "type": {
           "type": "string",
-          "pattern": "^[^\\W_](?:[-\\w]*[^\\W_])?$"
+          "pattern": "^[^\\W_](?:[\\-\\w]*[^\\W_])?$"
         },
         "id": {
           "type": "string",
-          "pattern": "^[^\\W_](?:[-\\w]*[^\\W_])?$"
+          "pattern": "^[^\\W_](?:[\\.\\-\\w]*[^\\W_])?$"
         },
         "attributes": {
           "$ref": "#/definitions/attributes"
