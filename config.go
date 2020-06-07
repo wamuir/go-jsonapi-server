@@ -76,7 +76,7 @@ var (
 var parameters = model.Parameters{
 	"include": model.Parameter{
 		Allowed: true,
-		Maximum: 2, // Maximum depth for traversal
+		Maximum: 3, // Maximum depth for traversal
 	},
 	"page[limit]": model.Parameter{
 		Allowed: true,
