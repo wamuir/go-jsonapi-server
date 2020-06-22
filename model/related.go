@@ -104,6 +104,8 @@ func (tx *Tx) GetRelated(t, i, k string, h url.URL, q QueryParams) (*Document, *
 			return document, errObj
 		}
 
+		data.Meta = identifier.Meta
+
 		collection = append(collection, data)
 
 		document.Included = document.Included.Merge(resource.Included)
