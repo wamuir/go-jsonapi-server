@@ -1,4 +1,4 @@
-package main
+package config
 
 import (
 	"github.com/wamuir/go-jsonapi-server/model"
@@ -17,10 +17,10 @@ import (
 //             https://api.example.com/v1/
 //             https://api.example.com/
 //
-var baseURL = url.URL{
+var BaseURL = url.URL{
 	Scheme: "http",
-	Host:   ":8080", // port optional
-	Path:   "/",     // trailing slash required
+	Host:   "localhost:8080", // port optional
+	Path:   "/",              // trailing slash required
 }
 
 // Address and port for the HTTP server to listen on.
@@ -29,8 +29,8 @@ var baseURL = url.URL{
 //   listenPort: the port number to listen on
 //
 var (
-	listenAddr string = "127.0.0.1"
-	listenPort int    = 8080
+	ListenAddr string = "127.0.0.1"
+	ListenPort int    = 8080
 )
 
 // Data source name (DSN) for connection to backend data store.
@@ -38,7 +38,7 @@ var (
 //      sqlite3:  see github.com/mattn/go-sqlite3 for additional info
 //        other:  reference the relevant documentation
 //
-var dsn = url.URL{
+var DSN = url.URL{
 	Scheme: "file",
 	Opaque: filepath.FromSlash("/tmp/graph.sqlite3"), // <- /var/db
 	RawQuery: url.Values{
@@ -58,10 +58,10 @@ var dsn = url.URL{
 //                request when keep-alives are enabled
 //
 var (
-	readTimeout  int = 5
-	writeTimeout int = 5
-	idleTimeout  int = 5
-	ctxTimeout   int = 4
+	ReadTimeout  int = 5
+	WriteTimeout int = 5
+	IdleTimeout  int = 5
+	CtxTimeout   int = 4
 )
 
 // Query parameters.
@@ -73,7 +73,7 @@ var (
 // page[offset]:  page offset for paginated collections of resources
 //                e.g., ?page[offset]=0
 //
-var parameters = model.Parameters{
+var Parameters = model.Parameters{
 	"include": model.Parameter{
 		Allowed: true,
 		Maximum: 3, // Maximum depth for traversal

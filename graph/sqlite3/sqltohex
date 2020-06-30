@@ -13,7 +13,7 @@ write_map()
         printf "${bytes}\n"
         printf "\t},\n"
     done
-    printf "\}\n"
+    printf "}\n"
 }
 
 go get github.com/wamuir/gohex

@@ -6,17 +6,16 @@ import (
 	"net/http"
 	"net/url"
 
+	"github.com/wamuir/go-jsonapi-core"
 	"github.com/wamuir/go-jsonapi-server/graph"
 )
 
-type Collection []Resource
-
 // Begin a new transaction (*Tx) and make a call to *Tx.GetCollection()
-func GetCollection(ctx context.Context, g graph.Graph, t string, h url.URL, q QueryParams) (*Document, *ModelError) {
+func GetCollection(ctx context.Context, g graph.Graph, t string, h url.URL, q QueryParams) (*core.Document, *core.Error) {
 
 	transaction, err := g.Transaction(ctx, true)
 	if err != nil {
-		e := MakeError(http.StatusInternalServerError)
+		e := core.MakeError(http.StatusInternalServerError)
 		e.Code = "001e49"
 		e.Title = "Encountered internal error while beginning graph transaction"
 		e.Detail = err.Error()
@@ -36,13 +35,13 @@ func GetCollection(ctx context.Context, g graph.Graph, t string, h url.URL, q Qu
 
 // Find and return a JSON:API document with a collection of resource objects as
 // primary data.
-func (tx *Tx) GetCollection(t string, h url.URL, q QueryParams) (*Document, *ModelError) {
+func (tx *Tx) GetCollection(t string, h url.URL, q QueryParams) (*core.Document, *core.Error) {
 
-	var document *Document = &Document{}
+	var document *core.Document = &core.Document{}
 
 	count, err := tx.CountVertices(t)
 	if err != nil {
-		e := MakeError(http.StatusInternalServerError)
+		e := core.MakeError(http.StatusInternalServerError)
 		e.Code = "d71a15"
 		e.Title = "Encountered internal error while querying graph"
 		e.Detail = err.Error()
@@ -50,16 +49,16 @@ func (tx *Tx) GetCollection(t string, h url.URL, q QueryParams) (*Document, *Mod
 	}
 
 	if count == 0 {
-		e := MakeError(http.StatusNotFound)
+		e := core.MakeError(http.StatusNotFound)
 		e.Code = "4aea6d"
 		return nil, e
 	}
 
-	collection := make(Collection, 0, count)
+	collection := make(core.Collection, 0, count)
 
 	vertices, err := tx.FindVertices(t, q.Limit, q.Offset)
 	if err != nil {
-		e := MakeError(http.StatusInternalServerError)
+		e := core.MakeError(http.StatusInternalServerError)
 		e.Code = "f3bce6"
 		e.Title = "Encountered internal error while querying graph"
 		e.Detail = err.Error()
@@ -68,7 +67,7 @@ func (tx *Tx) GetCollection(t string, h url.URL, q QueryParams) (*Document, *Mod
 
 	for _, vertex := range vertices {
 
-		identifier := Resource{
+		identifier := core.Resource{
 			Type:       vertex.Type,
 			Identifier: vertex.Identifier,
 		}
@@ -83,9 +82,9 @@ func (tx *Tx) GetCollection(t string, h url.URL, q QueryParams) (*Document, *Mod
 			return nil, modelErr
 		}
 
-		data, ok := resource.Data.(Resource)
+		data, ok := resource.Data.(core.Resource)
 		if !ok {
-			e := MakeError(http.StatusInternalServerError)
+			e := core.MakeError(http.StatusInternalServerError)
 			e.Code = "b5d595"
 			e.Title = "Type assertion failed"
 			e.Detail = fmt.Sprintf(
@@ -104,14 +103,15 @@ func (tx *Tx) GetCollection(t string, h url.URL, q QueryParams) (*Document, *Mod
 
 	ref, err := url.Parse(t)
 	if err != nil {
-		e := MakeError(http.StatusInternalServerError)
+		e := core.MakeError(http.StatusInternalServerError)
 		e.Code = "2aeacd"
 		e.Title = "Encountered internal error while generating response"
 		e.Detail = err.Error()
 		return nil, e
 	}
 
-	document.Links = collection.paginate(
+	_, document.Links = paginate(
+		collection,
 		h,
 		ref,
 		q.Limit,

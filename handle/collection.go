@@ -6,6 +6,7 @@ import (
 	"path"
 
 	"github.com/go-chi/chi"
+	"github.com/wamuir/go-jsonapi-core"
 	"github.com/wamuir/go-jsonapi-server/model"
 )
 
@@ -87,7 +88,7 @@ func (env *Environment) HandleCollection(w http.ResponseWriter, r *http.Request)
 			path.Join(i.Type, i.Identifier),
 		)
 		if err != nil {
-			e := model.MakeError(http.StatusInternalServerError)
+			e := core.MakeError(http.StatusInternalServerError)
 			e.Code = "bfe23f"
 			e.Title = "Encountered internal error while generating response"
 			e.Detail = err.Error()
@@ -104,7 +105,7 @@ func (env *Environment) HandleCollection(w http.ResponseWriter, r *http.Request)
 	default:
 
 		// HTTP Method not allowed
-		e := model.MakeError(http.StatusMethodNotAllowed)
+		e := core.MakeError(http.StatusMethodNotAllowed)
 		e.Code = "8e5fce"
 		env.Fail(w, r, e)
 		return

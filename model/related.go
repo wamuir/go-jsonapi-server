@@ -8,20 +8,21 @@ import (
 	"net/url"
 	"path"
 
+	"github.com/wamuir/go-jsonapi-core"
 	"github.com/wamuir/go-jsonapi-server/graph"
 )
 
-func GetRelated(ctx context.Context, g graph.Graph, t, i, k string, h url.URL, q QueryParams) (*Document, *ModelError) {
+func GetRelated(ctx context.Context, g graph.Graph, t, i, k string, h url.URL, q QueryParams) (*core.Document, *core.Error) {
 
-	var document *Document = &Document{}
+	var document *core.Document = &core.Document{}
 
 	transaction, err := g.Transaction(ctx, true)
 	if err != nil {
-		errObj := MakeError(http.StatusInternalServerError)
+		errObj := core.MakeError(http.StatusInternalServerError)
 		errObj.Code = "13f87d"
 		errObj.Title = "Encountered internal error while beginning graph transaction"
 		errObj.Detail = err.Error()
-		return &Document{}, errObj
+		return &core.Document{}, errObj
 	}
 	defer transaction.Close()
 
@@ -35,23 +36,23 @@ func GetRelated(ctx context.Context, g graph.Graph, t, i, k string, h url.URL, q
 	return document, nil
 }
 
-func (tx *Tx) GetRelated(t, i, k string, h url.URL, q QueryParams) (*Document, *ModelError) {
+func (tx *Tx) GetRelated(t, i, k string, h url.URL, q QueryParams) (*core.Document, *core.Error) {
 
-	var document *Document = &Document{}
+	var document *core.Document = &core.Document{}
 
 	count, err := tx.CountRelatedVertices(t, i, k)
 	if err != nil {
-		errObj := MakeError(http.StatusInternalServerError)
+		errObj := core.MakeError(http.StatusInternalServerError)
 		errObj.Code = "e9bf2d"
 		errObj.Title = "Encountered internal error while querying graph"
 		errObj.Detail = err.Error()
 		return document, errObj
 	}
 
-	collection := make(Collection, 0, count)
+	collection := make(core.Collection, 0, count)
 
 	if count == 0 {
-		errObj := MakeError(http.StatusNotFound)
+		errObj := core.MakeError(http.StatusNotFound)
 		errObj.Code = "9fbdd5"
 		return document, errObj
 	}
@@ -59,7 +60,7 @@ func (tx *Tx) GetRelated(t, i, k string, h url.URL, q QueryParams) (*Document, *
 	var edges []Edge
 	edges, err = tx.FindEdges(t, i, k, q.Limit, q.Offset)
 	if err != nil {
-		errObj := MakeError(http.StatusInternalServerError)
+		errObj := core.MakeError(http.StatusInternalServerError)
 		errObj.Code = "9a8ffa"
 		errObj.Title = "Encountered internal error while querying graph"
 		errObj.Detail = err.Error()
@@ -68,14 +69,14 @@ func (tx *Tx) GetRelated(t, i, k string, h url.URL, q QueryParams) (*Document, *
 
 	for _, edge := range edges {
 
-		identifier := Resource{
+		identifier := core.Resource{
 			Type:       edge.To.Type,
 			Identifier: edge.To.Identifier,
 		}
 
 		err := json.Unmarshal(edge.Meta, &identifier.Meta)
 		if err != nil {
-			errObj := MakeError(http.StatusInternalServerError)
+			errObj := core.MakeError(http.StatusInternalServerError)
 			errObj.Code = "67590d"
 			errObj.Title = "Encountered internal error while transforming data"
 			errObj.Detail = err.Error()
@@ -92,9 +93,9 @@ func (tx *Tx) GetRelated(t, i, k string, h url.URL, q QueryParams) (*Document, *
 			return document, errObj
 		}
 
-		data, ok := resource.Data.(Resource)
+		data, ok := resource.Data.(core.Resource)
 		if !ok {
-			errObj := MakeError(http.StatusInternalServerError)
+			errObj := core.MakeError(http.StatusInternalServerError)
 			errObj.Code = "9cf16c"
 			errObj.Title = "Type assertion failed"
 			errObj.Detail = fmt.Sprintf(
@@ -118,14 +119,15 @@ func (tx *Tx) GetRelated(t, i, k string, h url.URL, q QueryParams) (*Document, *
 		path.Join(t, i, k),
 	)
 	if err != nil {
-		errObj := MakeError(http.StatusInternalServerError)
+		errObj := core.MakeError(http.StatusInternalServerError)
 		errObj.Code = "1d385a"
 		errObj.Title = "Encountered internal error while generating response"
 		errObj.Detail = err.Error()
 		return document, errObj
 	}
 
-	document.Links = collection.paginate(
+	_, document.Links = paginate(
+		collection,
 		h,
 		ref,
 		q.Limit,

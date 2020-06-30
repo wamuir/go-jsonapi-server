@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	"github.com/go-chi/chi"
+	"github.com/wamuir/go-jsonapi-core"
 	"github.com/wamuir/go-jsonapi-server/model"
 )
 
@@ -83,7 +84,7 @@ func (env *Environment) HandleRelationship(w http.ResponseWriter, r *http.Reques
 	case "PATCH":
 
 		// Method not implemented
-		e := model.MakeError(http.StatusNotImplemented)
+		e := core.MakeError(http.StatusNotImplemented)
 		e.Code = "b4d563"
 		env.Fail(w, r, e)
 		return
@@ -117,7 +118,7 @@ func (env *Environment) HandleRelationship(w http.ResponseWriter, r *http.Reques
 	default:
 
 		// HTTP Method not allowed
-		e := model.MakeError(http.StatusMethodNotAllowed)
+		e := core.MakeError(http.StatusMethodNotAllowed)
 		e.Code = "ce3a82"
 		env.Fail(w, r, e)
 		return

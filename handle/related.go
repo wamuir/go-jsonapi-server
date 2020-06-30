@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	"github.com/go-chi/chi"
+	"github.com/wamuir/go-jsonapi-core"
 	"github.com/wamuir/go-jsonapi-server/model"
 )
 
@@ -55,7 +56,7 @@ func (env *Environment) HandleRelated(w http.ResponseWriter, r *http.Request) {
 	default:
 
 		// HTTP Method not allowed
-		e := model.MakeError(http.StatusMethodNotAllowed)
+		e := core.MakeError(http.StatusMethodNotAllowed)
 		e.Code = "ce3a82"
 		env.Fail(w, r, e)
 		return

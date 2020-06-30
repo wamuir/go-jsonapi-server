@@ -6,6 +6,8 @@ import (
 	"net/url"
 	"strconv"
 	"strings"
+
+	"github.com/wamuir/go-jsonapi-core"
 )
 
 type QueryParams struct {
@@ -71,12 +73,12 @@ func (ring KeyRing) Requests(key string) bool {
 	return false
 }
 
-func ParseIntegerParameter(parameter string, q url.Values, params Parameters) (int64, *ModelError) {
+func ParseIntegerParameter(parameter string, q url.Values, params Parameters) (int64, *core.Error) {
 
 	var (
 		value  int64
 		err    error
-		errObj *ModelError
+		errObj *core.Error
 	)
 
 	switch entries := q[parameter]; {
@@ -89,7 +91,7 @@ func ParseIntegerParameter(parameter string, q url.Values, params Parameters) (i
 
 		value, err = strconv.ParseInt(entries[0], 10, 64)
 		if err != nil {
-			errObj = MakeError(http.StatusBadRequest)
+			errObj = core.MakeError(http.StatusBadRequest)
 			errObj.Code = "ab1fb9"
 			errObj.Title = "Invalid query string"
 			errObj.Detail = fmt.Sprintf(
@@ -99,7 +101,7 @@ func ParseIntegerParameter(parameter string, q url.Values, params Parameters) (i
 			return value, errObj
 
 		} else if value < params[parameter].Minimum {
-			errObj = MakeError(http.StatusBadRequest)
+			errObj = core.MakeError(http.StatusBadRequest)
 			errObj.Code = "ee05db"
 			errObj.Title = "Invalid query string"
 			errObj.Detail = fmt.Sprintf(
@@ -110,7 +112,7 @@ func ParseIntegerParameter(parameter string, q url.Values, params Parameters) (i
 			return value, errObj
 
 		} else if value > params[parameter].Maximum {
-			errObj = MakeError(http.StatusBadRequest)
+			errObj = core.MakeError(http.StatusBadRequest)
 			errObj.Code = "2f6967"
 			errObj.Title = "Invalid query string"
 			errObj.Detail = fmt.Sprintf(
@@ -124,7 +126,7 @@ func ParseIntegerParameter(parameter string, q url.Values, params Parameters) (i
 
 	case len(entries) > 1:
 
-		errObj = MakeError(http.StatusBadRequest)
+		errObj = core.MakeError(http.StatusBadRequest)
 		errObj.Code = "d5ea49"
 		errObj.Title = "Invalid query string"
 		errObj.Detail = fmt.Sprintf(
@@ -139,16 +141,16 @@ func ParseIntegerParameter(parameter string, q url.Values, params Parameters) (i
 
 }
 
-func ParseQueryString(u *url.URL, params Parameters) (QueryParams, *ModelError) {
+func ParseQueryString(u *url.URL, params Parameters) (QueryParams, *core.Error) {
 
 	var (
 		queryParams QueryParams
-		errObj      *ModelError
+		errObj      *core.Error
 	)
 
 	q, err := url.ParseQuery(u.RawQuery)
 	if err != nil {
-		errObj = MakeError(http.StatusBadRequest)
+		errObj = core.MakeError(http.StatusBadRequest)
 		errObj.Code = "fc6f74"
 		errObj.Title = "Invalid query string"
 		errObj.Detail = err.Error()
@@ -157,7 +159,7 @@ func ParseQueryString(u *url.URL, params Parameters) (QueryParams, *ModelError) 
 
 	for par := range q {
 		if !params[par].Allowed {
-			errObj = MakeError(http.StatusBadRequest)
+			errObj = core.MakeError(http.StatusBadRequest)
 			errObj.Code = "6d01c2"
 			errObj.Title = "Invalid query string"
 			errObj.Detail = fmt.Sprintf("Parameter not allowed: %s", par)
@@ -193,7 +195,7 @@ func ParseQueryString(u *url.URL, params Parameters) (QueryParams, *ModelError) 
 	for key := range set {
 		teeth := strings.Split(key, ".")
 		if int64(len(teeth)) > params["include"].Maximum {
-			errObj = MakeError(http.StatusBadRequest)
+			errObj = core.MakeError(http.StatusBadRequest)
 			errObj.Code = "8bfeb8"
 			errObj.Title = "Invalid query string"
 			errObj.Detail = "Request for included resources exceeds maximum traversal depth"
