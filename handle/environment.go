@@ -51,7 +51,7 @@ func copyHeader(dst, src http.Header) {
 }
 
 // Validates Content-Type header per JSON:API spec
-func validateMIME(contentType string) *core.Error {
+func ValidateMIME(contentType string) *core.Error {
 
 	//contentType := r.Header.Get("Content-Type")
 
