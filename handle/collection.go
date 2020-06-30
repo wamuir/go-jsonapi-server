@@ -56,7 +56,7 @@ func (env *Environment) HandleCollection(w http.ResponseWriter, r *http.Request)
 	case "POST":
 
 		// Validate content type
-		e := validateMIME(r.Header.Get("Content-Type"))
+		e := ValidateMIME(r.Header.Get("Content-Type"))
 		if e != nil {
 			env.Fail(w, r, e)
 			return

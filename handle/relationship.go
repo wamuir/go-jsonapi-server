@@ -56,7 +56,7 @@ func (env *Environment) HandleRelationship(w http.ResponseWriter, r *http.Reques
 	case "POST":
 
 		// Validate content type
-		e := validateMIME(r.Header.Get("Content-Type"))
+		e := ValidateMIME(r.Header.Get("Content-Type"))
 		if e != nil {
 			env.Fail(w, r, e)
 			return
@@ -92,7 +92,7 @@ func (env *Environment) HandleRelationship(w http.ResponseWriter, r *http.Reques
 	case "DELETE":
 
 		// Validate content type
-		e := validateMIME(r.Header.Get("Content-Type"))
+		e := ValidateMIME(r.Header.Get("Content-Type"))
 		if e != nil {
 			env.Fail(w, r, e)
 			return
