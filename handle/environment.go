@@ -8,6 +8,7 @@ import (
 	"net/url"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/davecgh/go-spew/spew"
 	"github.com/wamuir/go-jsonapi-core"
@@ -26,6 +27,7 @@ type Environment struct {
 
 // Response is the header, body and status for a response.
 type Response struct {
+	Created time.Time
 	Header  http.Header
 	Body    *core.Document
 	Status  int
@@ -35,7 +37,8 @@ type Response struct {
 // NewResponse is a Response constructor.
 func NewResponse() Response {
 	response := Response{
-		Header: make(http.Header),
+		Created: time.Now(),
+		Header:  make(http.Header),
 	}
 	response.Header.Set("Access-Control-Allow-Origin", "*")
 	return response
@@ -155,6 +158,12 @@ func (env *Environment) Success(w http.ResponseWriter, r *http.Request, response
 
 		// Set JSON:API Version
 		response.Body.Version()
+
+		// Set timing in document meta object
+		if response.Body.Meta == nil {
+			response.Body.Meta = make(map[string]interface{})
+		}
+		response.Body.Meta["took"] = time.Now().Sub(response.Created).Milliseconds()
 
 		// Validate
 		result, err := schema.Validate(response.Body)
