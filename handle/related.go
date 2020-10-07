@@ -2,6 +2,7 @@ package handle
 
 import (
 	"net/http"
+	"time"
 
 	"github.com/go-chi/chi"
 	"github.com/wamuir/go-jsonapi-core"
@@ -14,7 +15,10 @@ import (
 // methods GET and HEAD.
 func (env *Environment) HandleRelated(w http.ResponseWriter, r *http.Request) {
 
-	var response Response = NewResponse()
+	var (
+		response Response  = NewResponse()
+		start    time.Time = time.Now()
+	)
 
 	q, e := model.ParseQueryString(r.URL, env.Parameters)
 	if e != nil {
@@ -48,6 +52,7 @@ func (env *Environment) HandleRelated(w http.ResponseWriter, r *http.Request) {
 			env.Fail(w, r, e)
 			return
 		}
+		document.Meta["took"] = time.Now().Sub(start).Milliseconds()
 		response.Body = document
 		response.Status = http.StatusOK
 		env.Success(w, r, response)

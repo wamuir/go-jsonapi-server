@@ -4,6 +4,7 @@ import (
 	"net/http"
 	"net/url"
 	"path"
+	"time"
 
 	"github.com/go-chi/chi"
 	"github.com/wamuir/go-jsonapi-core"
@@ -14,7 +15,10 @@ import (
 // resources (of type t string), with possible methods GET, HEAD and POST.
 func (env *Environment) HandleCollection(w http.ResponseWriter, r *http.Request) {
 
-	var response Response = NewResponse()
+	var (
+		response Response  = NewResponse()
+		start    time.Time = time.Now()
+	)
 
 	t := chi.URLParam(r, "type")
 
@@ -48,6 +52,7 @@ func (env *Environment) HandleCollection(w http.ResponseWriter, r *http.Request)
 			env.Fail(w, r, e)
 			return
 		}
+		document.Meta["took"] = time.Now().Sub(start).Milliseconds()
 		response.Body = document
 		response.Status = http.StatusOK
 		env.Success(w, r, response)
@@ -95,7 +100,7 @@ func (env *Environment) HandleCollection(w http.ResponseWriter, r *http.Request)
 			env.Fail(w, r, e)
 			return
 		}
-
+		document.Meta["took"] = time.Now().Sub(start).Milliseconds()
 		response.Body = document
 		response.Header.Set("Location", env.BaseURL.ResolveReference(ref).String())
 		response.Status = http.StatusCreated
