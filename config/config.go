@@ -90,4 +90,7 @@ var Parameters = model.Parameters{
 		Minimum: 0,
 		Maximum: 1<<63 - 1,
 	},
+	"sort": model.Parameter{
+		Allowed: true,
+	},
 }
