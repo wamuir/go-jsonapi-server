@@ -14,6 +14,7 @@ type QueryParams struct {
 	Limit   int64
 	Offset  int64
 	Include KeyRing
+	Sort    string
 }
 
 type Parameters map[string]Parameter
@@ -182,6 +183,9 @@ func ParseQueryString(u *url.URL, params Parameters) (QueryParams, *core.Error) 
 	if errObj != nil {
 		return queryParams, errObj
 	}
+
+	// Parse sort
+	queryParams.Sort = q.Get("sort")
 
 	// Parse include
 	set := map[string]bool{}

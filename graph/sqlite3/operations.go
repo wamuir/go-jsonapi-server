@@ -118,11 +118,16 @@ func (tx *transaction) CountVertices(vertexType string) (int64, error) {
 	return count, nil
 }
 
-func (tx *transaction) FindVertices(vertexType string, limit, offset int64) ([]graph.Vertex, error) {
+func (tx *transaction) FindVertices(vertexType string, limit, offset int64, sort string) ([]graph.Vertex, error) {
 
 	var vertices []graph.Vertex
 
-	rows, err := tx.Prepared["FindVertices"].Query(
+	key := "FindVertices"
+	if sort == "newest" {
+		key = "FindVerticesNewest"
+	}
+
+	rows, err := tx.Prepared[key].Query(
 		vertexType,
 		limit,
 		offset,

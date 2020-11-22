@@ -56,7 +56,7 @@ func (tx *Tx) GetCollection(t string, h url.URL, q QueryParams) (*core.Document,
 
 	collection := make(core.Collection, 0, count)
 
-	vertices, err := tx.FindVertices(t, q.Limit, q.Offset)
+	vertices, err := tx.FindVertices(t, q.Limit, q.Offset, q.Sort)
 	if err != nil {
 		e := core.MakeError(http.StatusInternalServerError)
 		e.Code = "f3bce6"

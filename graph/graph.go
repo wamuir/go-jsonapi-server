@@ -39,7 +39,7 @@ type Tx interface {
 	FindEdge(fromVertexType, fromVertexID, toVertexType, toVertexID, key string) (Edge, error)
 	FindEdges(fromVertexType, fromVertexID, key string, limit, offset int64) ([]Edge, error)
 	FindVertex(vertexType, vertexID string) (Vertex, error)
-	FindVertices(vertexType string, limit, offset int64) ([]Vertex, error)
+	FindVertices(vertexType string, limit, offset int64, sort string) ([]Vertex, error)
 	InsertEdge(fromVertexType, fromVertexID, toVertexType, toVertexID, key string, position int, meta []byte) error
 	InsertVertex(vertexType, vertexID string, attributes, meta []byte) error
 }
