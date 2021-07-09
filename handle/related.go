@@ -3,7 +3,7 @@ package handle
 import (
 	"net/http"
 
-	"github.com/go-chi/chi"
+	"github.com/go-chi/chi/v5"
 	"github.com/wamuir/go-jsonapi-core"
 	"github.com/wamuir/go-jsonapi-server/model"
 )
