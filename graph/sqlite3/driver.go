@@ -3,9 +3,17 @@ package backend
 import (
 	"context"
 	"database/sql"
+	"embed"
+	"path/filepath"
+	"strings"
+
 	_ "github.com/mattn/go-sqlite3" // SQLite3 driver for database/sql
 	"github.com/wamuir/go-jsonapi-server/graph"
 )
+
+//go:embed schema/*.sql
+//go:embed statements/*.sql
+var fs embed.FS
 
 // Connect opens a connection to a SQLite3 database and returns a graph, as
 // *graph.Graph.  Argument `dsn` (data source name) is connection string.
@@ -15,7 +23,7 @@ func Connect(dsn string) (graph.Graph, error) {
 
 	g, err := newConnection(dsn)
 	if err != nil {
-		return g, err
+		return nil, err
 	}
 
 	return g, nil
@@ -30,21 +38,21 @@ func newConnection(dsn string) (*connection, error) {
 
 	db, err := sql.Open("sqlite3", dsn)
 	if err != nil {
-		return &conn, err
+		return nil, err
 	}
 
 	db.SetMaxOpenConns(1)
 
 	err = db.Ping()
 	if err != nil {
-		return &conn, err
+		return nil, err
 	}
 
 	conn = connection{db}
 
 	err = conn.setup()
 	if err != nil {
-		return &conn, err
+		return nil, err
 	}
 
 	return &conn, nil
@@ -56,7 +64,7 @@ func (conn connection) Transaction(ctx context.Context, readOnly bool) (graph.Tx
 
 	tx, err := conn.newTransaction(ctx, true, readOnly)
 	if err != nil {
-		return tx, err
+		return nil, err
 	}
 
 	return tx, nil
@@ -70,16 +78,20 @@ func (conn connection) setup() error {
 	}
 
 	keys := []string{
-		"CreateTableVertices",
-		"CreateIndexVertices",
-		"CreateTableEdges",
-		"CreateIndexEdges",
+		"CreateTableVertices.sql",
+		"CreateIndexVertices.sql",
+		"CreateTableEdges.sql",
+		"CreateIndexEdges.sql",
 	}
 
 	for _, k := range keys {
-		var statement string = string(schema[k])
-		_, err := tx.Exec(statement)
+		p := filepath.Join("schema", k)
+		data, err := fs.ReadFile(p)
 		if err != nil {
+			return err
+		}
+
+		if _, err := tx.Exec(string(data)); err != nil {
 			return err
 		}
 	}
@@ -106,7 +118,7 @@ func (conn connection) newTransaction(ctx context.Context, prepare, readOnly boo
 
 	t, err := conn.DB.BeginTx(ctx, &options)
 	if err != nil {
-		return &transaction{}, err
+		return nil, err
 	}
 
 	tx := transaction{
@@ -114,10 +126,31 @@ func (conn connection) newTransaction(ctx context.Context, prepare, readOnly boo
 		Prepared: make(map[string]*sql.Stmt),
 	}
 	if prepare {
-		for name, statement := range statements {
-			tx.Prepared[name], err = tx.Prepare(string(statement))
+		keys := []string{
+			"CountRelatedVertices.sql",
+			"CountVertices.sql",
+			"DeleteEdge.sql",
+			"DeleteVertex.sql",
+			"FindDistinctEdgeKeys.sql",
+			"FindEdge.sql",
+			"FindEdges.sql",
+			"FindVertex.sql",
+			"FindVertices.sql",
+			"FindVerticesNewest.sql",
+			"InsertEdge.sql",
+			"InsertVertex.sql",
+		}
+		for _, k := range keys {
+			p := filepath.Join("statements", k)
+			data, err := fs.ReadFile(p)
 			if err != nil {
-				return &transaction{}, err
+				return nil, err
+			}
+
+			name := strings.TrimSuffix(k, ".sql")
+			tx.Prepared[name], err = tx.Prepare(string(data))
+			if err != nil {
+				return nil, err
 			}
 		}
 	}

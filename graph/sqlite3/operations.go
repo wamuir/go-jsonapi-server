@@ -133,7 +133,7 @@ func (tx *transaction) FindVertices(vertexType string, limit, offset int64, sort
 		offset,
 	)
 	if err != nil {
-		return vertices, err
+		return nil, err
 	}
 
 	defer rows.Close()
@@ -149,7 +149,7 @@ func (tx *transaction) FindVertices(vertexType string, limit, offset int64, sort
 			&vertex.Meta,
 		)
 		if err != nil {
-			return vertices, err
+			return nil, err
 		}
 
 		vertices = append(vertices, vertex)
@@ -191,7 +191,7 @@ func (tx *transaction) FindDistinctEdgeKeys(fromVertexType, fromVertexID string)
 		fromVertexID,
 	)
 	if err != nil {
-		return keys, err
+		return nil, err
 	}
 
 	defer rows.Close()
@@ -201,7 +201,7 @@ func (tx *transaction) FindDistinctEdgeKeys(fromVertexType, fromVertexID string)
 
 		err = rows.Scan(&key)
 		if err != nil {
-			return keys, err
+			return nil, err
 		}
 
 		keys = append(keys, key)
@@ -240,7 +240,7 @@ func (tx *transaction) FindEdges(fromVertexType, fromVertexID, key string, limit
 		offset,
 	)
 	if err != nil {
-		return edges, err
+		return nil, err
 	}
 
 	defer rows.Close()
@@ -262,7 +262,7 @@ func (tx *transaction) FindEdges(fromVertexType, fromVertexID, key string, limit
 			&edge.Meta,
 		)
 		if err != nil {
-			return edges, err
+			return nil, err
 		}
 
 		edges = append(edges, edge)
