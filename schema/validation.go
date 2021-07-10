@@ -1,12 +1,19 @@
 package schema
 
-import "github.com/xeipuuv/gojsonschema"
+import (
+	_ "embed"
+
+	"github.com/xeipuuv/gojsonschema"
+)
+
+//go:embed jsonapi-schema.modified.json
+var b []byte
 
 var schema *gojsonschema.Schema
 
 func init() {
 
-	loader := gojsonschema.NewBytesLoader(gohex)
+	loader := gojsonschema.NewBytesLoader(b)
 
 	if s, err := gojsonschema.NewSchema(loader); err != nil {
 		panic(err)
