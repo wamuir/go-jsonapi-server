@@ -84,9 +84,9 @@ func (tx *transaction) DeleteEdge(fromVertexType, fromVertexID, toVertexType, to
 	result, err := tx.Prepared["DeleteEdge"].Exec(
 		fromVertexType,
 		fromVertexID,
-		key,
 		toVertexType,
 		toVertexID,
+		key,
 	)
 	if err != nil {
 		return err

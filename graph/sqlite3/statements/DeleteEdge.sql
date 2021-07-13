@@ -12,3 +12,4 @@ DELETE
 	WHERE type=?
 	AND id=?
  )
+ AND key=?
