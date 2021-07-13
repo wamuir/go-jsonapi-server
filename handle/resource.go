@@ -56,10 +56,10 @@ func (env *Environment) HandleResource(w http.ResponseWriter, r *http.Request) {
 
 	case "PATCH":
 
-		// Method not implemented
-		e := core.MakeError(http.StatusNotImplemented)
+		// Method not allowed
+		e := core.MakeError(http.StatusMethodNotAllowed)
 		e.Code = "b83e07"
-		env.Success(w, r, response)
+		env.Fail(w, r, e)
 		return
 
 	case "DELETE":
