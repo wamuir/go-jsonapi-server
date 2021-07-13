@@ -29,7 +29,10 @@ func Connect(dsn string) (graph.Graph, error) {
 	return g, nil
 }
 
-type connection struct{ *sql.DB }
+type connection struct {
+	*sql.DB
+	closer func() error
+}
 
 // Returns a connection object.
 func newConnection(dsn string) (*connection, error) {
@@ -48,7 +51,7 @@ func newConnection(dsn string) (*connection, error) {
 		return nil, err
 	}
 
-	conn = connection{db}
+	conn = connection{db, db.Close}
 
 	err = conn.setup()
 	if err != nil {
@@ -56,6 +59,10 @@ func newConnection(dsn string) (*connection, error) {
 	}
 
 	return &conn, nil
+}
+
+func (conn connection) Close() error {
+	return conn.closer()
 }
 
 func (conn connection) Transaction(ctx context.Context, readOnly bool) (graph.Tx, error) {

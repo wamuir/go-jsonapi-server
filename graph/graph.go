@@ -25,6 +25,7 @@ var (
 )
 
 type Graph interface {
+	Close() error
 	Transaction(ctx context.Context, readOnly bool) (Tx, error)
 }
 
