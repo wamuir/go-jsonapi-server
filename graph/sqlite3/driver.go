@@ -82,6 +82,7 @@ func (conn connection) setup() error {
 		"CreateIndexVertices.sql",
 		"CreateTableEdges.sql",
 		"CreateIndexEdges.sql",
+		"CreateIndexEdgesFk.sql",
 	}
 
 	for _, k := range keys {
