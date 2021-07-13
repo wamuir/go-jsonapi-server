@@ -1,6 +1,7 @@
 package handle
 
 import (
+	"bytes"
 	"encoding/json"
 	"log"
 	"mime"
@@ -138,15 +139,18 @@ func (env *Environment) Fail(w http.ResponseWriter, r *http.Request, e *core.Err
 		return
 	}
 
+	// Write body to buffer
+	var buf bytes.Buffer
+	encoder := json.NewEncoder(&buf)
+	encoder.SetEscapeHTML(false)
+	encoder.SetIndent("", "\t")
+	encoder.Encode(document)
+
+	// Write header and body
 	w.Header().Set("X-Content-Type-Options", "nosniff")
 	w.Header().Set("Content-Type", "application/vnd.api+json")
 	w.WriteHeader(status)
-
-	encoder := json.NewEncoder(w)
-	encoder.SetEscapeHTML(false)
-	encoder.SetIndent("", "\t")
-	encoder.Encode(&document)
-
+	w.Write(buf.Bytes())
 	return
 }
 
@@ -194,15 +198,18 @@ func (env *Environment) Success(w http.ResponseWriter, r *http.Request, response
 		}
 	}
 
-	// Write header
-	copyHeader(w.Header(), response.Header)
-	w.WriteHeader(response.Status)
-
-	// Write body
+	// Write body to buffer
+	var buf bytes.Buffer
 	if response.Body != nil && r.Method != "HEAD" {
-		encoder := json.NewEncoder(w)
+		encoder := json.NewEncoder(&buf)
 		encoder.SetEscapeHTML(false)
 		encoder.SetIndent("", "\t")
 		encoder.Encode(response.Body)
 	}
+
+	// Write header and body
+	copyHeader(w.Header(), response.Header)
+	w.WriteHeader(response.Status)
+	w.Write(buf.Bytes())
+	return
 }
