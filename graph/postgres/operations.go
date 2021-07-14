@@ -279,9 +279,9 @@ func (tx *transaction) FindEdge(fromVertexType, fromVertexID, toVertexType, toVe
 	row := tx.Prepared["FindEdge"].QueryRow(
 		fromVertexType,
 		fromVertexID,
+		key,
 		toVertexType,
 		toVertexID,
-		key,
 	)
 
 	err := row.Scan(
