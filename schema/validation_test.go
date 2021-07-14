@@ -53,7 +53,6 @@ func TestValidate(t *testing.T) {
 		t.Fatalf("Got %v, want %v", r.Valid(), false)
 	}
 
-
 	// valid doc/collection as primary data
 	d = core.New()
 	d.Data = core.Collection{
