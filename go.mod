@@ -4,7 +4,7 @@ go 1.16
 
 require (
 	github.com/davecgh/go-spew v1.1.1
-	github.com/go-chi/chi/v5 v5.0.3
+	github.com/go-chi/chi/v5 v5.2.2
 	github.com/lib/pq v1.10.2
 	github.com/mattn/go-sqlite3 v1.14.7
 	github.com/rs/xid v1.3.0
